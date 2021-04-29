@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { GetStaticPaths, GetStaticProps } from 'next';
+import { Head } from 'next/document';
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -26,9 +29,28 @@ interface PostProps {
   post: Post;
 }
 
-// export default function Post() {
-//   // TODO
-// }
+export default function Post() {
+  return (
+    <>
+      <Head>
+        <title>Post title | spacetraveling.</title>
+      </Head>
+
+      <main className={styles.container}>
+        <article className={styles.post}>
+          <h1>Criando um app CRA do zero</h1>
+          <time>16 de Abril de 2021</time>
+          <div
+            className={styles.postContent}
+            // dangerouslySetInnerHTML={{ __html: post.content }}
+          >
+            conteudo do post
+          </div>
+        </article>
+      </main>
+    </>
+  );
+}
 
 // export const getStaticPaths = async () => {
 //   const prismic = getPrismicClient();

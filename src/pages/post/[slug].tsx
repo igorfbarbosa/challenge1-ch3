@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { GetStaticPaths, GetStaticProps } from 'next';
-import { Head } from 'next/document';
+import Head from 'next/head';
+import Header from '../../components/Header';
+import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -36,15 +38,25 @@ export default function Post() {
         <title>Post title | spacetraveling.</title>
       </Head>
 
-      <main className={styles.container}>
+      <Header />
+
+      <main className={commonStyles.container}>
         <article className={styles.post}>
           <h1>Criando um app CRA do zero</h1>
-          <time>16 de Abril de 2021</time>
+          <div className={styles.info}>
+            <FiCalendar />
+            <time>16 de Abril de 2021</time>
+            <FiUser />
+            <span>Igor Barbosa</span>
+            <FiClock />
+            <span>4 min</span>
+          </div>
           <div
             className={styles.postContent}
             // dangerouslySetInnerHTML={{ __html: post.content }}
           >
-            conteudo do post
+            <h2>Subtitulo</h2>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus sit facilis eligendi pariatur libero sunt corrupti, dolorum praesentium nulla voluptate odit amet voluptatem necessitatibus dolore molestiae, recusandae sed? Nisi, animi.</p>
           </div>
         </article>
       </main>

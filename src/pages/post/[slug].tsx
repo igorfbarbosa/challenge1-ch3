@@ -9,6 +9,7 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { RichText } from 'prismic-dom';
 
 interface Post {
   first_publication_date: string | null;
@@ -31,7 +32,9 @@ interface PostProps {
   post: Post;
 }
 
-export default function Post() {
+export default function Post({ post }: PostProps) {
+  console.log(post)
+
   return (
     <>
       <Head>
@@ -40,40 +43,81 @@ export default function Post() {
 
       <Header />
 
+      <img src="/banner.jpg" alt="imagem"className={styles.banner} />
       <main className={commonStyles.container}>
-        <article className={styles.post}>
-          <h1>Criando um app CRA do zero</h1>
-          <div className={styles.info}>
-            <FiCalendar />
-            <time>16 de Abril de 2021</time>
-            <FiUser />
-            <span>Igor Barbosa</span>
-            <FiClock />
-            <span>4 min</span>
+        <div className={styles.post}>
+          <div className={styles.header}>
+            <h1>Criando um app CRA do zero</h1>
+           <ul>
+             <li>
+               <FiCalendar />
+               02 Jun 2021
+             </li>
+             <li>
+               <FiUser />
+               Igor Barbosa
+             </li>
+             <li>
+               <FiClock />
+               5 min
+             </li>
+           </ul>
           </div>
-          <div
-            className={styles.postContent}
-            // dangerouslySetInnerHTML={{ __html: post.content }}
-          >
-            <h2>Subtitulo</h2>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus sit facilis eligendi pariatur libero sunt corrupti, dolorum praesentium nulla voluptate odit amet voluptatem necessitatibus dolore molestiae, recusandae sed? Nisi, animi.</p>
-          </div>
-        </article>
+
+          {/* {post.data.content.map(content => {
+            return (
+              <article key={content.heading}>
+                <h2>{content.heading}</h2>
+                <div
+                  className={styles.postContent}
+                  dangerouslySetInnerHTML={{ __html: RichText.asHtml(content.body)}}
+                />
+              </article>
+            )
+          })} */}
+        </div>
       </main>
     </>
   );
 }
 
-// export const getStaticPaths = async () => {
-//   const prismic = getPrismicClient();
-//   const posts = await prismic.query(TODO);
+export const getStaticPaths: GetStaticPaths = async () => {
+  // const prismic = getPrismicClient();
+  // const posts = await prismic.query(TODO);
 
-//   // TODO
-// };
+  return {
+    paths: [],
+    fallback: true,
+  }
+};
 
-// export const getStaticProps = async context => {
-//   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+export const getStaticProps: GetStaticProps = async context => {
+  const prismic = getPrismicClient();
+  const { slug } = context.params;
+  const response = await prismic.getByUID('posts', String(slug), {});
 
-//   // TODO
-// };
+  const post = {
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
+    data: {
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      author: response.data.author,
+      banner: {
+        url: response.data.banner.url,
+      },
+      content: response.data.content.map(content => {
+        return {
+          heading: content.heading,
+          body: [...content.body],
+        }
+      })
+    }
+  }
+
+  return {
+    props: {
+      post
+    }
+  }
+};

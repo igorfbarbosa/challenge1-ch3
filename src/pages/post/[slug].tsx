@@ -6,10 +6,14 @@ import Header from '../../components/Header';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
 
 import { getPrismicClient } from '../../services/prismic';
+import Prismic from '@prismicio/client';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import { RichText } from 'prismic-dom';
+import { useRouter } from 'next/router';
+import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 interface Post {
   first_publication_date: string | null;
@@ -33,48 +37,71 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
-  console.log(post)
+  const totalWords = post.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split(' ').length;
+    const words = contentItem.body.map(item => item.text.split(' ').length);
+    words.map(word => (total += word));
+
+    return total;
+  }, 0);
+  const readTime = Math.ceil(totalWords / 200);
+
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+  const formatedDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    {
+      locale: ptBR,
+    }
+  );
 
   return (
     <>
       <Head>
-        <title>Post title | spacetraveling.</title>
+        <title>{post.data.title} | spacetraveling.</title>
       </Head>
 
       <Header />
 
-      <img src="/banner.jpg" alt="imagem"className={styles.banner} />
+      <img src="/banner.jpg" alt="imagem" className={styles.banner} />
       <main className={commonStyles.container}>
         <div className={styles.post}>
           <div className={styles.header}>
-            <h1>Criando um app CRA do zero</h1>
-           <ul>
-             <li>
-               <FiCalendar />
-               02 Jun 2021
-             </li>
-             <li>
-               <FiUser />
-               Igor Barbosa
-             </li>
-             <li>
-               <FiClock />
-               5 min
-             </li>
-           </ul>
+            <h1>{post.data.title}</h1>
+            <ul>
+              <li>
+                <FiCalendar />
+                {formatedDate}
+              </li>
+              <li>
+                <FiUser />
+                {post.data.author}
+              </li>
+              <li>
+                <FiClock />
+                {`${readTime} min`}
+              </li>
+            </ul>
           </div>
 
-          {/* {post.data.content.map(content => {
+          {post?.data.content.map(content => {
             return (
               <article key={content.heading}>
                 <h2>{content.heading}</h2>
                 <div
                   className={styles.postContent}
-                  dangerouslySetInnerHTML={{ __html: RichText.asHtml(content.body)}}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
                 />
               </article>
-            )
-          })} */}
+            );
+          })}
         </div>
       </main>
     </>
@@ -82,13 +109,23 @@ export default function Post({ post }: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // const prismic = getPrismicClient();
-  // const posts = await prismic.query(TODO);
+  const prismic = getPrismicClient();
+  const posts = await prismic.query([
+    Prismic.Predicates.at('document.type', 'posts'),
+  ]);
+
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid,
+      },
+    };
+  });
 
   return {
-    paths: [],
+    paths,
     fallback: true,
-  }
+  };
 };
 
 export const getStaticProps: GetStaticProps = async context => {
@@ -110,14 +147,14 @@ export const getStaticProps: GetStaticProps = async context => {
         return {
           heading: content.heading,
           body: [...content.body],
-        }
-      })
-    }
-  }
+        };
+      }),
+    },
+  };
 
   return {
     props: {
-      post
-    }
-  }
+      post,
+    },
+  };
 };

@@ -31,16 +31,20 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
-export default function Home({ postsPagination }: HomeProps) {
+export default function Home({ postsPagination, preview }: HomeProps) {
   const formattedPost = postsPagination.results.map(post => {
     return {
       ...post,
-      first_publication_date: format(new Date(post.first_publication_date), 'dd MMM yyyy', { locale: ptBR }),
-    }
-  })
-
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        { locale: ptBR }
+      ),
+    };
+  });
 
   const [posts, setPosts] = useState<Post[]>(formattedPost);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
@@ -57,11 +61,14 @@ export default function Home({ postsPagination }: HomeProps) {
     setNextPage(postsResults.next_page);
     setCurrentPage(postsResults.page);
 
-
     const newPosts = postsResults.results.map(post => {
       return {
         uid: post.uid,
-        first_publication_date: format(new Date(post.first_publication_date), 'dd MMM yyyy', { locale: ptBR }),
+        first_publication_date: format(
+          new Date(post.first_publication_date),
+          'dd MMM yyyy',
+          { locale: ptBR }
+        ),
         data: {
           title: post.data.title,
           subtitle: post.data.subtitle,
@@ -79,9 +86,7 @@ export default function Home({ postsPagination }: HomeProps) {
         <title>Home | spacetraveling</title>
       </Head>
 
-
       <main className={commonStyles.container}>
-
         <div className={styles.posts}>
           <img src="/logo.svg" alt="logo" />
 
@@ -109,12 +114,17 @@ export default function Home({ postsPagination }: HomeProps) {
           )}
         </div>
 
+        {preview && (
+          <Link href="/api/exit-preview">
+            <a className={commonStyles.preview}>Sair do modo Preview</a>
+          </Link>
+        )}
       </main>
     </>
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ preview = false }) => {
   const prismic = getPrismicClient();
 
   const postsResponse = await prismic.query(
@@ -139,11 +149,12 @@ export const getStaticProps: GetStaticProps = async () => {
   const postsPagination = {
     next_page: postsResponse.next_page,
     results: posts,
-  }
+  };
 
   return {
     props: {
       postsPagination,
+      preview,
     },
   };
 };
